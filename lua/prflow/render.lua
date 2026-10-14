@@ -70,7 +70,18 @@ end
 
 local function render_hunk(buf, h, line_count, st)
   for i = 0, h.new_count - 1 do
-    mark(buf, h.new_start - 1 + i, { line_hl_group = st.line, sign_text = st.sign, sign_hl_group = st.sign_hl })
+    local row = h.new_start - 1 + i
+    -- Not line_hl_group: it paints over the word highlights below at any priority.
+    mark(buf, row, {
+      end_row = row + 1,
+      end_col = 0,
+      strict = false,
+      hl_group = st.line,
+      hl_eol = true,
+      priority = 100,
+      sign_text = st.sign,
+      sign_hl_group = st.sign_hl,
+    })
   end
   if h.old_count == 0 then
     return
@@ -82,7 +93,7 @@ local function render_hunk(buf, h, line_count, st)
       local old_ranges, new_ranges = diff.words(h.old_lines[i], h.new_lines[i])
       old_words[i] = old_ranges
       for _, r in ipairs(new_ranges) do
-        mark(buf, h.new_start + i - 2, { end_col = r[2], hl_group = 'PrflowAddText', priority = 5000 }, r[1])
+        mark(buf, h.new_start + i - 2, { end_col = r[2], hl_group = 'PrflowAddText', priority = 200 }, r[1])
       end
     end
   end

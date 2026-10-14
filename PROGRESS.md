@@ -65,6 +65,12 @@ Machine: Windows 11, Neovim 0.12.4, git 2.56.
 - `:PrflowStart` returns in 82–109 ms (budget 200 ms). Most of it is one synchronous `git rev-parse` process spawn; merge-base, name-status, numstat and ls-files run async after it returns. Base content is fetched lazily when a file opens.
 - Keystroke in the large file: the test counts calls to `diff.hunks`. It is 0 right after typing and still 0 after 100 ms; it becomes 1 only after the 150 ms debounce fires.
 
+## End-to-end check (real TUI)
+
+- Ran Neovim 0.12.4 (Linux) in a detached WSL tmux session on the standard fixture and captured the screen (`tmux capture-pane -e`) after each step: start, status, `]h` across A → deleted B → C2, float, viewed, edit, picker, mark-reviewed, `since-review`, `base`, stop, checkhealth, `:messages`. All behaved as expected, no errors in `:messages`.
+- Found and fixed: word highlights were invisible on screen. `line_hl_group` paints over any `hl_group` regardless of priority (verified with a probe in tmux). Added lines now use `hl_group` + `hl_eol` at priority 100, words at 200. Regression test: `tests/test_m5_words_float.lua` → "changed word is visibly different on screen" checks screenshot attributes.
+- Full suite also passes under Linux Neovim in WSL.
+
 ## Blocked
 
 (none)

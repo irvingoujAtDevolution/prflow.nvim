@@ -52,6 +52,21 @@ T['word diff']['highlights changed words in the buffer and in deleted lines'] = 
   eq(old_words, { { 2, '3' } })
 end
 
+T['word diff']['changed word is visibly different on screen'] = function()
+  local shot = child.get_screenshot()
+  for i, row in ipairs(shot.text) do
+    local text = table.concat(row)
+    local s = text:find('line three', 1, true)
+    if s then
+      local attr = shot.attr[i]
+      eq(attr[s] == attr[s + 5], false)
+      eq(attr[s + 5], attr[s + 9])
+      return
+    end
+  end
+  error('line three not on screen')
+end
+
 T['float'] = MiniTest.new_set()
 
 local function snapshot()

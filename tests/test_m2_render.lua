@@ -29,7 +29,7 @@ local function summary()
     local out = { line_hl = {}, virt = {} }
     for _, m in ipairs(vim.api.nvim_buf_get_extmarks(0, require('prflow.render').ns, 0, -1, { details = true })) do
       local row, d = m[2], m[4]
-      if d.line_hl_group then table.insert(out.line_hl, row) end
+      if d.hl_group == 'PrflowAdd' and d.hl_eol then table.insert(out.line_hl, row) end
       if d.virt_lines then
         local texts = {}
         for _, vl in ipairs(d.virt_lines) do
