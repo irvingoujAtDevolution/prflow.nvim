@@ -2,6 +2,7 @@
 local config = require('prflow.config')
 local diff = require('prflow.diff')
 local git = require('prflow.git')
+local state = require('prflow.state')
 
 local M = {}
 
@@ -215,13 +216,31 @@ local function set_files(s, out)
 end
 
 local function resolve(s, range, cb)
+  local function trimmed(out)
+    cb(vim.trim(out))
+  end
   if range.mode == 'base' then
-    git.run(s.root, { 'merge-base', s.ref, 'HEAD' }, function(out)
-      cb(vim.trim(out))
-    end)
+    git.run(s.root, { 'merge-base', s.ref, 'HEAD' }, trimmed)
+  elseif range.mode == 'commit' then
+    git.run(s.root, { 'rev-parse', '--verify', range.rev .. '^{commit}' }, trimmed)
+  elseif range.mode == 'since-review' then
+    cb(M.branch_state().reviewed_head)
   else
     error(('prflow: unknown range mode %q'):format(range.mode))
   end
+end
+
+function M.branch_state()
+  local s = M.session
+  return state.branch(s.state, s.branch)
+end
+
+function M.is_viewed(h)
+  return M.branch_state().viewed[h.hash] == true
+end
+
+function M.save_state()
+  state.save(M.session.gitdir, M.session.state)
 end
 
 function M.load(range)
@@ -275,6 +294,7 @@ function M.start(ref)
     by_path = {},
     by_key = {},
     ready = false,
+    state = state.load(repo.gitdir),
   }
   M.session = s
   vim.api.nvim_create_autocmd('BufReadPost', {

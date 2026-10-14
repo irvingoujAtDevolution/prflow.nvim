@@ -21,3 +21,16 @@ end)
 command('PrflowHunk', function()
   require('prflow').hunk()
 end)
+
+command('PrflowRange', function(o)
+  require('prflow').range(o.fargs[1], o.fargs[2])
+end, {
+  nargs = '+',
+  complete = function(_, line)
+    return vim.fn.len(vim.split(line, '%s+')) <= 2 and { 'base', 'commit', 'since-review' } or {}
+  end,
+})
+
+command('PrflowMarkReviewed', function()
+  require('prflow').mark_reviewed()
+end)

@@ -11,8 +11,8 @@ function M.order(files)
   return out
 end
 
-function M.eligible(_)
-  return true
+function M.eligible(h)
+  return require('prflow.config').get().show_viewed or not core.is_viewed(h)
 end
 
 local function find_in(file, from, dir)

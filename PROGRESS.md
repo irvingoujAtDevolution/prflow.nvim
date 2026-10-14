@@ -37,6 +37,12 @@
 - Tests: `tests/test_m5_words_float.lua` — word ranges for known edits, word extmarks on A (`{2,5,10}`, `{27,7,17}`) and the old-word chunk `3`, float contents and diff mode, no leftover windows or buffers after `q` or `:close`.
 - Known gaps: old/new lines inside a changed hunk pair by position, so word highlights are rough when a hunk adds or removes lines in the middle.
 
+## M6 — Viewed state + range switching
+
+- Done: `<leader>hv` toggles viewed for the hunk under the cursor, saved to `<git-dir>/prflow/state.json` under `branches.<branch>.viewed.<hash>`. Viewed hunks render with `PrflowViewed` (dimmed, no word highlights); `]h` skips them unless `vim.g.prflow.show_viewed`. Hash covers path + old + new lines, so editing a viewed hunk unviews it. `:PrflowRange base|commit <sha>|since-review`, `:PrflowMarkReviewed` records HEAD under `branches.<branch>.reviewed_head`.
+- Tests: `tests/test_m6_viewed_range.lua` — toggle and dim, `]h` skip and `show_viewed`, state survives stop/start (and the JSON file is keyed by branch), editing unviews, `since-review` shows only D (new commit) + E + G, `commit <sha>` shows only E + G.
+- Known gaps: two identical hunks in one file share a hash, so marking one marks both. Stale hashes stay in `state.json`.
+
 ## Blocked
 
 (none)

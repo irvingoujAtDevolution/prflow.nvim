@@ -27,6 +27,7 @@ local function map()
     { keys.next, function() require('prflow.stream').step(1) end, 'prflow: next hunk' },
     { keys.prev, function() require('prflow.stream').step(-1) end, 'prflow: previous hunk' },
     { keys.hunk, function() M.hunk() end, 'prflow: hunk side by side' },
+    { keys.viewed, function() M.toggle_viewed() end, 'prflow: toggle hunk viewed' },
   }
   for _, a in ipairs(actions) do
     local lhs = a[1]
@@ -52,6 +53,56 @@ end
 
 function M.hunk()
   require('prflow.float').open()
+end
+
+local function active()
+  local s = core().session
+  if s and s.ready then
+    return s
+  end
+  vim.notify('prflow: not in review mode', vim.log.levels.WARN)
+end
+
+function M.toggle_viewed()
+  if not active() then
+    return
+  end
+  local file, h = require('prflow.stream').hunk_at_cursor()
+  if not h then
+    return vim.notify('prflow: no hunk under cursor', vim.log.levels.WARN)
+  end
+  local viewed = core().branch_state().viewed
+  viewed[h.hash] = (not viewed[h.hash]) or nil
+  core().save_state()
+  core().render(file)
+end
+
+function M.mark_reviewed()
+  local s = active()
+  if not s then
+    return
+  end
+  local head = vim.trim(require('prflow.git').run_sync(s.root, { 'rev-parse', 'HEAD' }))
+  core().branch_state().reviewed_head = head
+  core().save_state()
+  vim.notify(('prflow: marked %s as reviewed'):format(head:sub(1, 7)))
+end
+
+-- `base`, `commit <sha>` or `since-review`.
+function M.range(mode, rev)
+  if not active() then
+    return
+  end
+  if mode == 'commit' and not rev then
+    return vim.notify('prflow: usage :PrflowRange commit <sha>', vim.log.levels.ERROR)
+  end
+  if mode == 'since-review' and not core().branch_state().reviewed_head then
+    return vim.notify('prflow: no review recorded, run :PrflowMarkReviewed first', vim.log.levels.ERROR)
+  end
+  if mode ~= 'base' and mode ~= 'commit' and mode ~= 'since-review' then
+    return vim.notify(('prflow: unknown range %q'):format(tostring(mode)), vim.log.levels.ERROR)
+  end
+  core().load({ mode = mode, rev = rev })
 end
 
 function M.status()
