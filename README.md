@@ -10,6 +10,7 @@ files you already edit, LSP keeps working, and one hunk stream runs across all c
 - `]h` / `[h` walk every hunk of every changed file in one ordered list.
 - Mark hunks as viewed; viewed state is saved per branch and survives restarts.
 - Review "since my last review" with `:PrflowRange since-review`.
+- Nothing to start: open Neovim in a git repo and the diff against `main`/`master` is already there.
 
 Requires Neovim 0.10+ and `git`. No other dependencies;
 [snacks.nvim](https://github.com/folke/snacks.nvim) is used for the file picker when installed.
@@ -19,10 +20,22 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 ```lua
 {
   'irvingoujAtDevolution/prflow.nvim',
-  cmd = { 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowTree', 'PrflowRange', 'PrflowMarkReviewed', 'PrflowHelp' },
+  event = 'VeryLazy', -- load at startup so review mode can start by itself
   opts = {},
 }
 ```
+
+## Automatic mode (default)
+
+With `auto = true` (the default) you never run `:PrflowStart`:
+
+- Neovim starts (or you `:cd`) inside a git repo → review mode starts against the detected base.
+- Not a git repo, or no `origin/HEAD` / `origin/main` / `origin/master` → nothing happens, no messages.
+- You switch branch, commit or pull (also from lazygit or another terminal) → the review reloads
+  the next time you enter a buffer or focus Neovim.
+- `:PrflowStop` turns it off until the next startup or `:cd`. `:PrflowStart` turns it back on.
+
+Set `auto = false` to keep it manual.
 
 ## Commands
 
@@ -69,6 +82,7 @@ These are the defaults:
 
 ```lua
 require('prflow').setup({
+  auto = true,           -- start by itself in git repos, follow branch switches
   base = nil,            -- ref for :PrflowStart without an argument; nil = origin/HEAD, main, master
   debounce_ms = 150,     -- wait after the last edit before recomputing hunks
   show_viewed = false,   -- true: ]h / [h also stop on viewed hunks

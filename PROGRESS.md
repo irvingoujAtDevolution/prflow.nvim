@@ -80,6 +80,13 @@ Machine: Windows 11, Neovim 0.12.4, git 2.56.
 - Perf note: "file list ready" grew from ~150–185 ms to ~230–400 ms after default-base detection added one serial git call; `:PrflowStart` itself still returns in 94–143 ms.
 - Known gaps: directories are not collapsible; the tree lives in the tab where it was opened.
 
+## M8 — Automatic mode (user request)
+
+- Done: `lua/prflow/auto.lua`, `auto = true` by default. Starts on VimEnter (or immediately when loaded after it) and on DirChanged; quiet sessions stop silently when the repo or base is unusable; BufEnter/FocusGained run an async `git rev-parse HEAD --abbrev-ref HEAD` at most once a second and reload on change. `plugin/prflow.lua` defers the setup one tick so lazy.nvim `opts` are applied first.
+- Tests: `tests/test_m8_auto.lua` — starts with no command, silent outside a repo then starts after `:cd`, silent without a base ref (no keymaps left), reloads on new commit and on branch switch, `:PrflowStop` stays stopped, `auto = false` stays manual.
+- Real UI check: Windows `nvim.exe` with the user's full LazyVim config inside WSL tmux, opened on a fixture repo with no command typed → `prflow: feature vs origin/main (…), 6 files`, 9 extmarks in A, `]r` landed on line 3, gitsigns kept `]h`, no errors.
+- Found while checking: lazy.nvim fires `VeryLazy` only after `UIEnter`, so headless runs can never show auto mode under a lazy config; real-UI checks are required for that path.
+
 ## Blocked
 
 (none)
