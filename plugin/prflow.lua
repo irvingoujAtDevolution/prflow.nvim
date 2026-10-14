@@ -13,3 +13,7 @@ end)
 command('PrflowStatus', function()
   require('prflow').print_status()
 end)
+
+command('PrflowFiles', function()
+  require('prflow').files()
+end)

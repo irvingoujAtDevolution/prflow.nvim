@@ -24,6 +24,13 @@
 - Tests: `tests/test_m3_stream.lua` — 9 presses of `]h` visit all 9 hunks in order then wrap, `[h` reverse walk, deleted-file buffer properties and highlights, custom keys and mapping restore.
 - Known gaps: none.
 
+## M4 — File picker
+
+- Done: `:PrflowFiles` (`lua/prflow/picker.lua`) — `<status> <path> +x -y` per file; snacks picker when available, else `vim.ui.select`; selection opens the file at its first hunk.
+- Tests: `tests/test_m4_picker.lua` — items match the M1 list with counts from `git diff --numstat`, counts unchanged after a file's hunks load, selecting C2 lands on line 5.
+- Snacks branch: smoke-checked by hand against snacks.nvim in a headless nvim (6 items, confirm opens C2:5); not in the suite because the suite has no snacks dependency.
+- Known gaps: none.
+
 ## Blocked
 
 (none)

@@ -80,6 +80,10 @@ function M.print_status()
   vim.api.nvim_echo({ { msg } }, false, {})
 end
 
+function M.files()
+  require('prflow.picker').pick()
+end
+
 -- Hunks of a changed file, computed on demand.
 function M.hunks(path)
   local s = core().session
