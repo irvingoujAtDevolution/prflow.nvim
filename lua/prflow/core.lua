@@ -180,19 +180,16 @@ end
 
 local function reset(s)
   require('prflow.render').clear_all()
+  for _, buf in pairs(s.scratch) do
+    if vim.api.nvim_buf_is_valid(buf) then
+      vim.api.nvim_buf_delete(buf, { force = true })
+    end
+  end
   for buf in pairs(s.attached) do
     M.detach(buf)
   end
-  s.attached, s.files, s.by_path, s.by_key = {}, {}, {}, {}
+  s.attached, s.scratch, s.files, s.by_path, s.by_key = {}, {}, {}, {}, {}
   s.ready = false
-end
-
-function M.order(files)
-  local out = vim.list_slice(files)
-  table.sort(out, function(a, b)
-    return a.path < b.path
-  end)
-  return out
 end
 
 local function set_files(s, out)
@@ -207,7 +204,7 @@ local function set_files(s, out)
   for _, path in ipairs(git.split0(out.untracked)) do
     files[#files + 1] = { path = path, old_path = path, status = 'A', untracked = true }
   end
-  s.files = M.order(files)
+  s.files = require('prflow.stream').order(files)
   for i, f in ipairs(s.files) do
     f.index = i
     s.by_path[f.path] = f
@@ -272,6 +269,7 @@ function M.start(ref)
     gen = 0,
     group = vim.api.nvim_create_augroup('prflow', { clear = true }),
     attached = {},
+    scratch = {},
     timers = {},
     files = {},
     by_path = {},

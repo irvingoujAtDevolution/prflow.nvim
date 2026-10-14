@@ -8,11 +8,43 @@ function M.setup(opts)
   vim.g.prflow = vim.tbl_deep_extend('force', vim.g.prflow or {}, opts or {})
 end
 
+-- Mappings that review mode replaced, restored on stop.
+local saved = {}
+
+local function unmap()
+  for lhs, prev in pairs(saved) do
+    pcall(vim.keymap.del, 'n', lhs)
+    if prev ~= false then
+      vim.fn.mapset('n', false, prev)
+    end
+  end
+  saved = {}
+end
+
+local function map()
+  local keys = require('prflow.config').get().keys
+  local actions = {
+    { keys.next, function() require('prflow.stream').step(1) end, 'prflow: next hunk' },
+    { keys.prev, function() require('prflow.stream').step(-1) end, 'prflow: previous hunk' },
+  }
+  for _, a in ipairs(actions) do
+    local lhs = a[1]
+    if lhs and lhs ~= '' then
+      local prev = vim.fn.maparg(lhs, 'n', false, true)
+      saved[lhs] = (prev.buffer == 0 and prev.lhs) and prev or false
+      vim.keymap.set('n', lhs, a[2], { desc = a[3] })
+    end
+  end
+end
+
 function M.start(ref)
+  unmap()
   core().start(ref)
+  map()
 end
 
 function M.stop()
+  unmap()
   core().stop()
 end
 

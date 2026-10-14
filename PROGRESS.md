@@ -18,6 +18,12 @@
 - Tests: `tests/test_m2_render.lua` — extmark rows and virt_lines on A, F opened after start, stop clears all buffers, screenshot shows `line 10`/`line 11` between `line 9` and `line 12`.
 - Known gaps: deleted lines above line 1 need `topfill` to be visible (Neovim limitation); M3 navigation sets it.
 
+## M3 — Cross-file hunk stream
+
+- Done: `lua/prflow/stream.lua` — `order(files)` (by path), `step(dir)` walks one global list, opens the next file at its first hunk, wraps with a notification. Deleted files open as readonly `prflow://deleted/<path>` scratch buffers, wiped on stop. `]h`/`[h` set on start, configurable via `keys`, previous mappings restored on stop.
+- Tests: `tests/test_m3_stream.lua` — 9 presses of `]h` visit all 9 hunks in order then wrap, `[h` reverse walk, deleted-file buffer properties and highlights, custom keys and mapping restore.
+- Known gaps: none.
+
 ## Blocked
 
 (none)
