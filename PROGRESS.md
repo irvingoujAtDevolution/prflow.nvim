@@ -12,6 +12,12 @@
 - Tests: `tests/test_m1_review.lua` — exact file list and statuses, A's hunk ranges, recompute after debounce with `vim.system` stubbed to fail, explicit ref, status/stop.
 - Known gaps: binary files are diffed as text.
 
+## M2 — Inline rendering
+
+- Done: `lua/prflow/render.lua` — added/changed lines get `PrflowAdd` line highlight, deleted lines render as padded `virt_lines` above the hunk (below the last line for end-of-file deletions), signs `+ ~ -`. Applies to buffers opened after start (`BufReadPost`). `:PrflowStop` clears the namespace in every buffer.
+- Tests: `tests/test_m2_render.lua` — extmark rows and virt_lines on A, F opened after start, stop clears all buffers, screenshot shows `line 10`/`line 11` between `line 9` and `line 12`.
+- Known gaps: deleted lines above line 1 need `topfill` to be visible (Neovim limitation); M3 navigation sets it.
+
 ## Blocked
 
 (none)

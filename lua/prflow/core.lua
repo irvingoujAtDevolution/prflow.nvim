@@ -67,12 +67,16 @@ local function new_lines(file)
   return strip_cr(vim.fn.readfile(M.abs(file.path)))
 end
 
--- Called after a file's hunks change; rendering hooks in here.
-function M.on_update(_) end
+function M.render(file)
+  local render = require('prflow.render')
+  for _, buf in ipairs(M.bufs_for(file)) do
+    render.buf(buf, file)
+  end
+end
 
 function M.recompute(file)
   file.hunks = diff.hunks(file.path, file.base_lines, new_lines(file))
-  M.on_update(file)
+  M.render(file)
 end
 
 function M.with_base(file, cb)
@@ -174,11 +178,8 @@ function M.attach(buf)
   end)
 end
 
--- Called before a session's files are dropped; rendering hooks in here.
-function M.on_reset(_) end
-
 local function reset(s)
-  M.on_reset(s)
+  require('prflow.render').clear_all()
   for buf in pairs(s.attached) do
     M.detach(buf)
   end
@@ -282,6 +283,12 @@ function M.start(ref)
     group = s.group,
     callback = function(ev)
       M.attach(ev.buf)
+    end,
+  })
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    group = s.group,
+    callback = function()
+      require('prflow.render').define_highlights()
     end,
   })
   M.load({ mode = 'base' })
