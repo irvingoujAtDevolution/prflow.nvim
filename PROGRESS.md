@@ -43,6 +43,28 @@
 - Tests: `tests/test_m6_viewed_range.lua` — toggle and dim, `]h` skip and `show_viewed`, state survives stop/start (and the JSON file is keyed by branch), editing unviews, `since-review` shows only D (new commit) + E + G, `commit <sha>` shows only E + G.
 - Known gaps: two identical hunks in one file share a hash, so marking one marks both. Stale hashes stay in `state.json`.
 
+## Definition of done
+
+- `:checkhealth prflow` (`lua/prflow/health.lua`): Neovim version, git on PATH, base ref exists. `tests/test_done.lua` checks zero `ERROR` lines in the fixture repo, and an `ERROR` for a missing ref.
+- Worktrees: `tests/test_done.lua` starts review inside a `git worktree` and checks `state.json` lands in that worktree's git-dir, not the main repo's.
+- README: install snippet, commands, keymaps, config table, highlights.
+
+### Performance check
+
+Fixture: 200 changed files under `src/` plus a 5,000-line file `big` (201 changed files).
+Test: `tests/test_done.lua` → "performance: start returns fast, keystrokes wait for the debounce".
+Machine: Windows 11, Neovim 0.12.4, git 2.56.
+
+| Run | `:PrflowStart` returns | File list ready | Recompute of the 5,000-line file |
+| --- | --- | --- | --- |
+| 1 | 103.3 ms | 151.5 ms | 0.9 ms |
+| 2 | 84.7 ms | 149.1 ms | 0.9 ms |
+| 3 | 81.9 ms | 172.9 ms | 0.9 ms |
+| 4 | 108.6 ms | 185.0 ms | 0.9 ms |
+
+- `:PrflowStart` returns in 82–109 ms (budget 200 ms). Most of it is one synchronous `git rev-parse` process spawn; merge-base, name-status, numstat and ls-files run async after it returns. Base content is fetched lazily when a file opens.
+- Keystroke in the large file: the test counts calls to `diff.hunks`. It is 0 right after typing and still 0 after 100 ms; it becomes 1 only after the 150 ms debounce fires.
+
 ## Blocked
 
 (none)
