@@ -18,8 +18,7 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 
 ```lua
 {
-  dir = 'D:/prflow.nvim', -- local checkout; use '<owner>/prflow.nvim' once it is on GitHub
-  name = 'prflow.nvim',
+  'irvingoujAtDevolution/prflow.nvim',
   cmd = { 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowRange', 'PrflowMarkReviewed' },
   opts = {},
 }
