@@ -19,7 +19,7 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 ```lua
 {
   'irvingoujAtDevolution/prflow.nvim',
-  cmd = { 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowRange', 'PrflowMarkReviewed' },
+  cmd = { 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowRange', 'PrflowMarkReviewed', 'PrflowHelp' },
   opts = {},
 }
 ```
@@ -37,6 +37,7 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 | `:PrflowRange commit <sha>` | Diff against a specific commit. |
 | `:PrflowRange since-review` | Diff against the `HEAD` recorded by `:PrflowMarkReviewed`. |
 | `:PrflowMarkReviewed` | Record the current `HEAD` as reviewed for this branch. |
+| `:PrflowHelp` | List these commands and the keymaps as currently configured. |
 
 The changed-file list includes uncommitted edits to tracked files and untracked files
 (shown as added). Deleted files open as read-only `prflow://deleted/<path>` buffers.

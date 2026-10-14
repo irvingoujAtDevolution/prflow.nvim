@@ -34,3 +34,7 @@ end, {
 command('PrflowMarkReviewed', function()
   require('prflow').mark_reviewed()
 end)
+
+command('PrflowHelp', function()
+  require('prflow').help()
+end)

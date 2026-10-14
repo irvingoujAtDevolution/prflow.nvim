@@ -64,4 +64,16 @@ T['status and stop'] = function()
   eq(child.cmd_capture('PrflowStatus'), 'prflow: inactive')
 end
 
+T['help lists commands and the configured keys'] = function()
+  child.lua([[vim.g.prflow = { keys = { next = ']r', viewed = false } }]])
+  local text = child.cmd_capture('PrflowHelp')
+  for _, cmd in ipairs({ 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowRange', 'PrflowMarkReviewed', 'PrflowHelp' }) do
+    MiniTest.expect.no_equality(text:find(':' .. cmd, 1, true), nil)
+  end
+  MiniTest.expect.no_equality(text:find(']r  ', 1, true), nil)
+  MiniTest.expect.no_equality(text:find('[h  ', 1, true), nil)
+  eq(text:find(']h  ', 1, true), nil)
+  eq(text:find('viewed', 1, true) ~= nil and text:find('<leader>hv', 1, true) == nil, true)
+end
+
 return T

@@ -141,6 +141,42 @@ function M.files()
   require('prflow.picker').pick()
 end
 
+function M.help()
+  local keys = require('prflow.config').get().keys
+  local lines = {
+    { 'prflow: review a branch inside your buffers', 'Title' },
+    { '' },
+    { 'Commands', 'Title' },
+    { '  :PrflowStart [ref]            start review against merge-base of ref (default origin/main)' },
+    { '  :PrflowStop                   stop and clear all highlights' },
+    { '  :PrflowStatus                 branch, base and number of changed files' },
+    { '  :PrflowFiles                  pick a changed file, opens at its first hunk' },
+    { '  :PrflowHunk                   hunk under cursor side by side, q closes' },
+    { '  :PrflowRange base             diff against the merge-base again' },
+    { '  :PrflowRange commit <sha>     diff against a specific commit' },
+    { '  :PrflowRange since-review     only changes after :PrflowMarkReviewed' },
+    { '  :PrflowMarkReviewed           record HEAD as reviewed for this branch' },
+    { '  :PrflowHelp                   this help' },
+    { '' },
+    { 'Keys (only while review mode is on)', 'Title' },
+  }
+  for _, k in ipairs({
+    { keys.next, 'next hunk, across files' },
+    { keys.prev, 'previous hunk' },
+    { keys.hunk, 'hunk side by side' },
+    { keys.viewed, 'toggle viewed (dimmed, skipped by next/prev)' },
+  }) do
+    if k[1] and k[1] ~= '' then
+      lines[#lines + 1] = { ('  %-28s  %s'):format(k[1], k[2]) }
+    end
+  end
+  local chunks = {}
+  for i, l in ipairs(lines) do
+    chunks[#chunks + 1] = { l[1] .. (i < #lines and '\n' or ''), l[2] }
+  end
+  vim.api.nvim_echo(chunks, false, {})
+end
+
 -- Hunks of a changed file, computed on demand.
 function M.hunks(path)
   local s = core().session
