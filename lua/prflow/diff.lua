@@ -13,6 +13,40 @@ function M.hash(path, old_lines, new_lines)
   return vim.fn.sha256(path .. '\n@@old\n' .. table.concat(old_lines, '\n') .. '\n@@new\n' .. table.concat(new_lines, '\n'))
 end
 
+-- Splits a line into words, whitespace runs and single characters,
+-- each as { text, start_col, end_col } (0-based, end exclusive).
+local function tokens(line)
+  local out, pos = {}, 1
+  while pos <= #line do
+    local _, e = line:find('^[%w_]+', pos)
+    e = e or select(2, line:find('^%s+', pos)) or select(2, line:find('^[\192-\247][\128-\191]*', pos)) or pos
+    out[#out + 1] = { line:sub(pos, e), pos - 1, e }
+    pos = e + 1
+  end
+  return out
+end
+
+local function texts(toks)
+  return vim.tbl_map(function(t)
+    return t[1]
+  end, toks)
+end
+
+-- Changed byte ranges { start_col, end_col } between two versions of a line.
+function M.words(old, new)
+  local a, b = tokens(old), tokens(new)
+  local old_ranges, new_ranges = {}, {}
+  for _, h in ipairs(textdiff(join(texts(a)), join(texts(b)), { result_type = 'indices' })) do
+    if h[2] > 0 then
+      old_ranges[#old_ranges + 1] = { a[h[1]][2], a[h[1] + h[2] - 1][3] }
+    end
+    if h[4] > 0 then
+      new_ranges[#new_ranges + 1] = { b[h[3]][2], b[h[3] + h[4] - 1][3] }
+    end
+  end
+  return old_ranges, new_ranges
+end
+
 -- Line hunks between `old` and `new`. `top` is the buffer line a hunk is
 -- anchored to: its first new line, or the line after a pure deletion.
 function M.hunks(path, old, new)

@@ -31,6 +31,12 @@
 - Snacks branch: smoke-checked by hand against snacks.nvim in a headless nvim (6 items, confirm opens C2:5); not in the suite because the suite has no snacks dependency.
 - Known gaps: none.
 
+## M5 — Word diff + side-by-side float
+
+- Done: `diff.words()` tokenizes lines (words, whitespace runs, single UTF-8 chars) and diffs tokens in-process; changed words get `PrflowAddText` in the buffer and `PrflowDeleteText` chunks in the deleted virt_lines. `:PrflowHunk` / `<leader>hd` opens base (left) and current (right) floats with `diffthis`; `q` or closing either float closes both and wipes both buffers.
+- Tests: `tests/test_m5_words_float.lua` — word ranges for known edits, word extmarks on A (`{2,5,10}`, `{27,7,17}`) and the old-word chunk `3`, float contents and diff mode, no leftover windows or buffers after `q` or `:close`.
+- Known gaps: old/new lines inside a changed hunk pair by position, so word highlights are rough when a hunk adds or removes lines in the middle.
+
 ## Blocked
 
 (none)

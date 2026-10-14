@@ -1,3 +1,5 @@
+local diff = require('prflow.diff')
+
 local M = {}
 
 M.ns = vim.api.nvim_create_namespace('prflow')
@@ -5,6 +7,8 @@ M.ns = vim.api.nvim_create_namespace('prflow')
 local links = {
   PrflowAdd = 'DiffAdd',
   PrflowDelete = 'DiffDelete',
+  PrflowAddText = 'DiffText',
+  PrflowDeleteText = 'DiffText',
   PrflowAddSign = 'Added',
   PrflowDeleteSign = 'Removed',
   PrflowChangeSign = 'Changed',
@@ -24,14 +28,29 @@ local signs = {
   delete = { '-', 'PrflowDeleteSign' },
 }
 
-local function virt_line(buf, text)
-  text = text:gsub('\t', string.rep(' ', vim.bo[buf].tabstop))
-  local pad = math.max(0, vim.o.columns - vim.fn.strdisplaywidth(text))
-  return { { text .. string.rep(' ', pad), 'PrflowDelete' } }
+-- A deleted line as virt_line chunks, changed words in `PrflowDeleteText`.
+local function virt_line(buf, text, ranges)
+  local tab = string.rep(' ', vim.bo[buf].tabstop)
+  local chunks, width, pos = {}, 0, 0
+  local function push(s, e, hl)
+    if e > s then
+      local piece = text:sub(s + 1, e):gsub('\t', tab)
+      chunks[#chunks + 1] = { piece, hl }
+      width = width + vim.fn.strdisplaywidth(piece)
+    end
+  end
+  for _, r in ipairs(ranges or {}) do
+    push(pos, r[1], 'PrflowDelete')
+    push(r[1], r[2], 'PrflowDeleteText')
+    pos = r[2]
+  end
+  push(pos, #text, 'PrflowDelete')
+  chunks[#chunks + 1] = { string.rep(' ', math.max(0, vim.o.columns - width)), 'PrflowDelete' }
+  return chunks
 end
 
-local function mark(buf, row, opts)
-  vim.api.nvim_buf_set_extmark(buf, M.ns, row, 0, opts)
+local function mark(buf, row, opts, col)
+  vim.api.nvim_buf_set_extmark(buf, M.ns, row, col or 0, opts)
 end
 
 -- The scratch buffer of a deleted file shows the base content, every line deleted.
@@ -50,9 +69,20 @@ local function render_hunk(buf, h, line_count)
   if h.old_count == 0 then
     return
   end
+  -- Old and new lines are paired by position inside a changed hunk.
+  local old_words = {}
+  if h.kind == 'change' then
+    for i = 1, math.min(h.old_count, h.new_count) do
+      local old_ranges, new_ranges = diff.words(h.old_lines[i], h.new_lines[i])
+      old_words[i] = old_ranges
+      for _, r in ipairs(new_ranges) do
+        mark(buf, h.new_start + i - 2, { end_col = r[2], hl_group = 'PrflowAddText', priority = 5000 }, r[1])
+      end
+    end
+  end
   local virt = {}
-  for _, l in ipairs(h.old_lines) do
-    virt[#virt + 1] = virt_line(buf, l)
+  for i, l in ipairs(h.old_lines) do
+    virt[#virt + 1] = virt_line(buf, l, old_words[i])
   end
   local row, above = h.top - 1, true
   if row >= line_count then

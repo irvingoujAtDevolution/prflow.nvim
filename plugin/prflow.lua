@@ -17,3 +17,7 @@ end)
 command('PrflowFiles', function()
   require('prflow').files()
 end)
+
+command('PrflowHunk', function()
+  require('prflow').hunk()
+end)

@@ -26,6 +26,7 @@ local function map()
   local actions = {
     { keys.next, function() require('prflow.stream').step(1) end, 'prflow: next hunk' },
     { keys.prev, function() require('prflow.stream').step(-1) end, 'prflow: previous hunk' },
+    { keys.hunk, function() M.hunk() end, 'prflow: hunk side by side' },
   }
   for _, a in ipairs(actions) do
     local lhs = a[1]
@@ -45,7 +46,12 @@ end
 
 function M.stop()
   unmap()
+  require('prflow.float').close()
   core().stop()
+end
+
+function M.hunk()
+  require('prflow.float').open()
 end
 
 function M.status()
