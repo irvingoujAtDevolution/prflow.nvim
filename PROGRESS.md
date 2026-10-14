@@ -71,6 +71,15 @@ Machine: Windows 11, Neovim 0.12.4, git 2.56.
 - Found and fixed: word highlights were invisible on screen. `line_hl_group` paints over any `hl_group` regardless of priority (verified with a probe in tmux). Added lines now use `hl_group` + `hl_eol` at priority 100, words at 200. Regression test: `tests/test_m5_words_float.lua` → "changed word is visibly different on screen" checks screenshot attributes.
 - Full suite also passes under Linux Neovim in WSL.
 
+## M7 — File tree sidebar + float jump (user request after M6)
+
+- Done: `:PrflowTree` / `<leader>ht` toggles `lua/prflow/tree.lua` — a 40-column left split listing changed files by directory in stream order, with status, `+a -d`, viewed progress (`?` until a file's hunks exist), current file highlighted, fully viewed files dimmed. `<CR>` or a single mouse click (`<LeftRelease>`) opens the real file in the last used normal window at its first unviewed hunk. `]h`/`[h`, the picker and tree jumps never open files inside the tree window. `<CR>` in the hunk float jumps to that line in the real file.
+- Tests: `tests/test_m7_tree.lua` — layout and order, counts and progress, `<CR>` open, mouse click via `nvim_input_mouse`, `]h` from inside the tree, current-file highlight follows navigation, toggle/stop cleanup, float `<CR>` jump.
+- Real TUI: checked in WSL tmux (tree layout, open, viewed progress, dimming, current-file highlight distinct from the tree's cursorline).
+- Rejected: seeding progress for all files from one `git diff -U0` (hashes differed for 13/199 files on devolutions-gateway).
+- Perf note: "file list ready" grew from ~150–185 ms to ~230–400 ms after default-base detection added one serial git call; `:PrflowStart` itself still returns in 94–143 ms.
+- Known gaps: directories are not collapsible; the tree lives in the tab where it was opened.
+
 ## Blocked
 
 (none)

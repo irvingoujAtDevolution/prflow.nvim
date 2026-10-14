@@ -73,6 +73,15 @@ function M.open()
     end)
     vim.wo[win].foldenable = false
     vim.keymap.set('n', 'q', M.close, { buffer = buf, nowait = true, desc = 'prflow: close hunk view' })
+    vim.keymap.set('n', '<CR>', function()
+      local line = h.top
+      if i == 2 and h.new_count > 0 then
+        line = h.new_start + vim.api.nvim_win_get_cursor(0)[1] - 1
+      end
+      M.close()
+      local last = vim.api.nvim_buf_line_count(0)
+      vim.api.nvim_win_set_cursor(0, { math.max(1, math.min(line, last)), 0 })
+    end, { buffer = buf, nowait = true, desc = 'prflow: jump to this line in the file' })
     o.bufs[i], o.wins[i] = buf, win
   end
   vim.api.nvim_create_autocmd('WinClosed', {

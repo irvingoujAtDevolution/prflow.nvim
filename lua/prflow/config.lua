@@ -10,6 +10,7 @@ M.defaults = {
     prev = '[h',
     hunk = '<leader>hd',
     viewed = '<leader>hv',
+    tree = '<leader>ht',
   },
 }
 

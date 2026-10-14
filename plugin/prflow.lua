@@ -18,6 +18,10 @@ command('PrflowFiles', function()
   require('prflow').files()
 end)
 
+command('PrflowTree', function()
+  require('prflow').tree()
+end)
+
 command('PrflowHunk', function()
   require('prflow').hunk()
 end)

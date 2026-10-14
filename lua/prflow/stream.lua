@@ -50,7 +50,14 @@ local function deleted_buf(file)
   return buf
 end
 
+-- First hunk `]h` would stop at, else the first hunk.
+function M.first(file)
+  local hunks = core.ensure_hunks(file)
+  return find_in(file, 0, 1) or hunks[1]
+end
+
 function M.open(file)
+  require('prflow.tree').leave()
   if file.status == 'D' then
     local buf = deleted_buf(file)
     vim.api.nvim_win_set_buf(0, buf)
@@ -61,6 +68,7 @@ function M.open(file)
 end
 
 function M.jump(file, h)
+  require('prflow.tree').leave()
   if core.file_for_buf(vim.api.nvim_get_current_buf()) ~= file then
     M.open(file)
   end
@@ -77,6 +85,7 @@ function M.step(dir)
   if not (s and s.ready) then
     return vim.notify('prflow: not in review mode', vim.log.levels.WARN)
   end
+  require('prflow.tree').leave()
   local files, n = s.files, #s.files
   local file = core.file_for_buf(vim.api.nvim_get_current_buf())
   local idx = dir > 0 and 0 or n + 1

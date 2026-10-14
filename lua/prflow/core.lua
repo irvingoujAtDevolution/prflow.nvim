@@ -73,6 +73,7 @@ function M.render(file)
   for _, buf in ipairs(M.bufs_for(file)) do
     render.buf(buf, file)
   end
+  require('prflow.tree').refresh()
 end
 
 function M.recompute(file)
@@ -191,6 +192,7 @@ local function reset(s)
   end
   s.attached, s.scratch, s.files, s.by_path, s.by_key = {}, {}, {}, {}, {}
   s.ready = false
+  require('prflow.tree').refresh()
 end
 
 local function set_files(s, out)
@@ -278,6 +280,7 @@ function M.load(range)
             M.attach(buf)
           end
         end
+        require('prflow.tree').refresh()
       end
     end
     git.run(s.root, { 'diff', '--name-status', '-M', '-z', base }, done('status'))
@@ -310,6 +313,18 @@ function M.start(ref)
     group = s.group,
     callback = function(ev)
       M.attach(ev.buf)
+    end,
+  })
+  vim.api.nvim_create_autocmd('WinEnter', {
+    group = s.group,
+    callback = function()
+      require('prflow.tree').track(vim.api.nvim_get_current_win())
+    end,
+  })
+  vim.api.nvim_create_autocmd('BufEnter', {
+    group = s.group,
+    callback = function()
+      require('prflow.tree').refresh()
     end,
   })
   vim.api.nvim_create_autocmd('ColorScheme', {

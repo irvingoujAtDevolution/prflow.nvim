@@ -19,7 +19,7 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 ```lua
 {
   'irvingoujAtDevolution/prflow.nvim',
-  cmd = { 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowRange', 'PrflowMarkReviewed', 'PrflowHelp' },
+  cmd = { 'PrflowStart', 'PrflowStop', 'PrflowStatus', 'PrflowFiles', 'PrflowHunk', 'PrflowTree', 'PrflowRange', 'PrflowMarkReviewed', 'PrflowHelp' },
   opts = {},
 }
 ```
@@ -32,7 +32,8 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 | `:PrflowStop` | Leave review mode and clear every highlight. |
 | `:PrflowStatus` | Show branch, base and number of changed files. |
 | `:PrflowFiles` | Pick a changed file (`status path +added -removed`); opens it at its first hunk. |
-| `:PrflowHunk` | Show the hunk under the cursor side by side (base left, current right). `q` closes it. |
+| `:PrflowTree` | Toggle a left sidebar of changed files grouped by directory, with `+added -removed` and viewed progress. `<CR>` or a mouse click opens the real file at its first unviewed hunk. |
+| `:PrflowHunk` | Show the hunk under the cursor side by side (base left, current right). `<CR>` jumps to that line in the real file; `q` closes. |
 | `:PrflowRange base` | Diff against the merge-base again. |
 | `:PrflowRange commit <sha>` | Diff against a specific commit. |
 | `:PrflowRange since-review` | Diff against the `HEAD` recorded by `:PrflowMarkReviewed`. |
@@ -53,6 +54,13 @@ key is restored on stop.
 | `[h` | Previous hunk. |
 | `<leader>hd` | Side-by-side view of the hunk under the cursor. |
 | `<leader>hv` | Toggle viewed for the hunk under the cursor. |
+| `<leader>ht` | Toggle the file tree. |
+
+The tree shows viewed progress (`1/4`) for files whose hunks have been computed (opened or
+visited with `]h`); other files show `?`. The current file is highlighted and follows navigation.
+
+If you use LazyVim, gitsigns maps `]h`/`[h` per buffer, which wins over prflow's global map.
+Pick other keys, for example `keys = { next = ']r', prev = '[r' }`.
 
 ## Configuration
 
@@ -69,6 +77,7 @@ require('prflow').setup({
     prev = '[h',
     hunk = '<leader>hd',
     viewed = '<leader>hv',
+    tree = '<leader>ht',
   },
 })
 ```
@@ -84,6 +93,8 @@ All are default links, so a colorscheme can override them.
 | `PrflowAddText` / `PrflowDeleteText` | `DiffText` | Changed words |
 | `PrflowAddSign` / `PrflowChangeSign` / `PrflowDeleteSign` | `Added` / `Changed` / `Removed` | Sign column |
 | `PrflowViewed` | `Comment` | Hunks marked as viewed |
+| `PrflowTreeCurrent` | `Visual` | Current file in the tree |
+| `PrflowTreeDir` / `PrflowTreeDone` / `PrflowTreeHeader` | `Directory` / `Comment` / `Title` | Tree directories, fully viewed files, header |
 
 ## Lua API
 
@@ -92,7 +103,7 @@ local prflow = require('prflow')
 prflow.start(ref) ; prflow.stop()
 prflow.status()        -- { active, ready, branch, ref, base, mode, files = { { path, old_path, status, added, removed } } }
 prflow.hunks(path)     -- hunks of one changed file
-prflow.files() ; prflow.hunk() ; prflow.toggle_viewed()
+prflow.files() ; prflow.tree() ; prflow.hunk() ; prflow.toggle_viewed()
 prflow.range(mode, sha) ; prflow.mark_reviewed()
 ```
 

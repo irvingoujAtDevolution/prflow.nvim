@@ -28,6 +28,7 @@ local function map()
     { keys.prev, function() require('prflow.stream').step(-1) end, 'prflow: previous hunk' },
     { keys.hunk, function() M.hunk() end, 'prflow: hunk side by side' },
     { keys.viewed, function() M.toggle_viewed() end, 'prflow: toggle hunk viewed' },
+    { keys.tree, function() M.tree() end, 'prflow: toggle file tree' },
   }
   for _, a in ipairs(actions) do
     local lhs = a[1]
@@ -48,11 +49,16 @@ end
 function M.stop()
   unmap()
   require('prflow.float').close()
+  require('prflow.tree').close()
   core().stop()
 end
 
 function M.hunk()
   require('prflow.float').open()
+end
+
+function M.tree()
+  require('prflow.tree').toggle()
 end
 
 local function active()
@@ -151,7 +157,8 @@ function M.help()
     { '  :PrflowStop                   stop and clear all highlights' },
     { '  :PrflowStatus                 branch, base and number of changed files' },
     { '  :PrflowFiles                  pick a changed file, opens at its first hunk' },
-    { '  :PrflowHunk                   hunk under cursor side by side, q closes' },
+    { '  :PrflowTree                   toggle the changed-files sidebar (<CR> or click opens)' },
+    { '  :PrflowHunk                   hunk under cursor side by side, <CR> jumps, q closes' },
     { '  :PrflowRange base             diff against the merge-base again' },
     { '  :PrflowRange commit <sha>     diff against a specific commit' },
     { '  :PrflowRange since-review     only changes after :PrflowMarkReviewed' },
@@ -165,6 +172,7 @@ function M.help()
     { keys.prev, 'previous hunk' },
     { keys.hunk, 'hunk side by side' },
     { keys.viewed, 'toggle viewed (dimmed, skipped by next/prev)' },
+    { keys.tree, 'toggle the file tree' },
   }) do
     if k[1] and k[1] ~= '' then
       lines[#lines + 1] = { ('  %-28s  %s'):format(k[1], k[2]) }
