@@ -42,3 +42,10 @@ end)
 command('PrflowHelp', function()
   require('prflow').help()
 end)
+
+-- Deferred a tick: lazy.nvim applies `opts` right after sourcing this file.
+vim.schedule(function()
+  if require('prflow.config').get().auto then
+    require('prflow.auto').setup()
+  end
+end)

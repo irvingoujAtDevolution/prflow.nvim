@@ -217,23 +217,39 @@ local function set_files(s, out)
   end
 end
 
+-- Quiet (auto-started) sessions end silently on failure; manual ones raise.
+local function fail(s, msg)
+  if not s.quiet then
+    error(msg, 0)
+  end
+  if M.session == s then
+    s.on_fail()
+  end
+end
+
+local function on_err(s)
+  return s.quiet and function()
+    fail(s)
+  end or nil
+end
+
 local function resolve(s, range, cb)
   local function trimmed(out)
     cb(vim.trim(out))
   end
   if range.mode == 'base' then
     if s.ref then
-      return git.run(s.root, { 'merge-base', s.ref, 'HEAD' }, trimmed)
+      return git.run(s.root, { 'merge-base', s.ref, 'HEAD' }, trimmed, on_err(s))
     end
     git.default_base(s.root, function(ref)
       if not ref then
-        error('prflow: no origin/HEAD, origin/main or origin/master; pass a ref to :PrflowStart or set vim.g.prflow.base', 0)
+        return fail(s, 'prflow: no origin/HEAD, origin/main or origin/master; pass a ref to :PrflowStart or set vim.g.prflow.base')
       end
       s.ref = ref
-      git.run(s.root, { 'merge-base', ref, 'HEAD' }, trimmed)
+      git.run(s.root, { 'merge-base', ref, 'HEAD' }, trimmed, on_err(s))
     end)
   elseif range.mode == 'commit' then
-    git.run(s.root, { 'rev-parse', '--verify', range.rev .. '^{commit}' }, trimmed)
+    git.run(s.root, { 'rev-parse', '--verify', range.rev .. '^{commit}' }, trimmed, on_err(s))
   elseif range.mode == 'since-review' then
     cb(M.branch_state().reviewed_head)
   else
@@ -283,19 +299,32 @@ function M.load(range)
         require('prflow.tree').refresh()
       end
     end
-    git.run(s.root, { 'diff', '--name-status', '-M', '-z', base }, done('status'))
-    git.run(s.root, { 'diff', '--numstat', '-M', '-z', base }, done('numstat'))
-    git.run(s.root, { 'ls-files', '--others', '--exclude-standard', '-z' }, done('untracked'))
+    git.run(s.root, { 'diff', '--name-status', '-M', '-z', base }, done('status'), on_err(s))
+    git.run(s.root, { 'diff', '--numstat', '-M', '-z', base }, done('numstat'), on_err(s))
+    git.run(s.root, { 'ls-files', '--others', '--exclude-standard', '-z' }, done('untracked'), on_err(s))
   end)
 end
 
-function M.start(ref)
+-- opts.quiet: return false instead of raising when cwd is not a usable repo,
+-- and call opts.on_fail() if a later async step fails.
+function M.start(ref, opts)
+  opts = opts or {}
   M.stop()
-  local repo = git.repo(vim.fn.getcwd())
+  local ok, repo = pcall(git.repo, vim.fn.getcwd())
+  if not ok then
+    if opts.quiet then
+      return false
+    end
+    error(repo, 0)
+  end
   local s = {
     root = repo.root,
     gitdir = repo.gitdir,
     branch = repo.branch,
+    head = repo.head,
+    ref_arg = ref,
+    quiet = opts.quiet,
+    on_fail = opts.on_fail,
     ref = ref or config.get().base,
     gen = 0,
     group = vim.api.nvim_create_augroup('prflow', { clear = true }),
@@ -334,6 +363,7 @@ function M.start(ref)
     end,
   })
   M.load({ mode = 'base' })
+  return true
 end
 
 function M.stop()

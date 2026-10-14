@@ -11,10 +11,13 @@ local function check(r, args)
   return r.stdout
 end
 
--- Calls `cb(stdout)` on the main loop.
-function M.run(root, args, cb)
+-- Calls `cb(stdout)` on the main loop; a failure goes to `on_err(stderr)` when given.
+function M.run(root, args, cb, on_err)
   vim.system(argv(args), { cwd = root, text = true }, function(r)
     vim.schedule(function()
+      if r.code ~= 0 and on_err then
+        return on_err(r.stderr)
+      end
       cb(check(r, args))
     end)
   end)
@@ -25,8 +28,9 @@ function M.run_sync(root, args)
 end
 
 function M.repo(cwd)
-  local out = vim.split(vim.trim(M.run_sync(cwd, { 'rev-parse', '--show-toplevel', '--absolute-git-dir', '--abbrev-ref', 'HEAD' })), '\n')
-  return { root = out[1], gitdir = out[2], branch = out[3] }
+  local args = { 'rev-parse', '--show-toplevel', '--absolute-git-dir', 'HEAD', '--abbrev-ref', 'HEAD' }
+  local out = vim.split(vim.trim(M.run_sync(cwd, args)), '\n')
+  return { root = out[1], gitdir = out[2], head = out[3], branch = out[4] }
 end
 
 function M.to_lines(text)

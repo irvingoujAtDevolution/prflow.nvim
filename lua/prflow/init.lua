@@ -40,10 +40,19 @@ local function map()
   end
 end
 
-function M.start(ref)
+-- opts.quiet: used by auto mode; skip silently when the repo is not usable.
+function M.start(ref, opts)
+  opts = opts or {}
   unmap()
-  core().start(ref)
-  map()
+  local started = core().start(ref, {
+    quiet = opts.quiet,
+    on_fail = function()
+      M.stop()
+    end,
+  })
+  if started then
+    map()
+  end
 end
 
 function M.stop()
