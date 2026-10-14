@@ -220,7 +220,16 @@ local function resolve(s, range, cb)
     cb(vim.trim(out))
   end
   if range.mode == 'base' then
-    git.run(s.root, { 'merge-base', s.ref, 'HEAD' }, trimmed)
+    if s.ref then
+      return git.run(s.root, { 'merge-base', s.ref, 'HEAD' }, trimmed)
+    end
+    git.default_base(s.root, function(ref)
+      if not ref then
+        error('prflow: no origin/HEAD, origin/main or origin/master; pass a ref to :PrflowStart or set vim.g.prflow.base', 0)
+      end
+      s.ref = ref
+      git.run(s.root, { 'merge-base', ref, 'HEAD' }, trimmed)
+    end)
   elseif range.mode == 'commit' then
     git.run(s.root, { 'rev-parse', '--verify', range.rev .. '^{commit}' }, trimmed)
   elseif range.mode == 'since-review' then

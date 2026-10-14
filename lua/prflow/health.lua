@@ -18,9 +18,14 @@ function M.check()
   health.ok(vim.trim(git({ '--version' }).stdout))
   local s = require('prflow.core').session
   local cwd = s and s.root or vim.fn.getcwd()
-  local ref = s and s.ref or require('prflow.config').get().base
   if git({ 'rev-parse', '--show-toplevel' }, cwd).code ~= 0 then
     return health.warn('Not inside a git repository: ' .. cwd)
+  end
+  local ref = s and s.ref or require('prflow.config').get().base or require('prflow.git').default_base_sync(cwd)
+  if not ref then
+    return health.error('No base ref: origin/HEAD, origin/main and origin/master are all missing', {
+      'Run `git fetch`, or set `vim.g.prflow.base`',
+    })
   end
   if git({ 'rev-parse', '--verify', '--quiet', ref .. '^{commit}' }, cwd).code == 0 then
     health.ok(('Base ref %s exists'):format(ref))

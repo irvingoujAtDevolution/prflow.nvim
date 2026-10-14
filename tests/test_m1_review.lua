@@ -64,6 +64,37 @@ T['status and stop'] = function()
   eq(child.cmd_capture('PrflowStatus'), 'prflow: inactive')
 end
 
+T['default base'] = MiniTest.new_set()
+
+T['default base']['falls back to origin/master when there is no origin/main'] = function()
+  fixture.git(fx.root, 'push', '-q', 'origin', 'main:master')
+  fixture.git(fx.origin, 'symbolic-ref', 'HEAD', 'refs/heads/master')
+  fixture.git(fx.root, 'push', '-q', 'origin', '--delete', 'main')
+  fixture.git(fx.root, 'fetch', '-q', '--prune')
+  H.start(child)
+  eq(child.lua_get([[require('prflow').status().ref]]), 'origin/master')
+  eq(#H.files(child), 6)
+end
+
+T['default base']['prefers origin/HEAD over origin/main'] = function()
+  fixture.git(fx.root, 'push', '-q', 'origin', 'HEAD:master')
+  fixture.git(fx.root, 'fetch', '-q')
+  fixture.git(fx.root, 'remote', 'set-head', 'origin', 'master')
+  H.start(child)
+  eq(child.lua_get([[require('prflow').status().ref]]), 'origin/master')
+  eq(H.files(child), { { 'E', 'M' }, { 'G', 'A' } })
+end
+
+T['default base']['configured base wins over detection'] = function()
+  fixture.git(fx.root, 'push', '-q', 'origin', 'HEAD:master')
+  fixture.git(fx.root, 'fetch', '-q')
+  fixture.git(fx.root, 'remote', 'set-head', 'origin', 'master')
+  child.lua([[vim.g.prflow = { base = 'origin/main' }]])
+  H.start(child)
+  eq(child.lua_get([[require('prflow').status().ref]]), 'origin/main')
+  eq(#H.files(child), 6)
+end
+
 T['help lists commands and the configured keys'] = function()
   child.lua([[vim.g.prflow = { keys = { next = ']r', viewed = false } }]])
   local text = child.cmd_capture('PrflowHelp')

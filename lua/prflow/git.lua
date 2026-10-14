@@ -95,4 +95,41 @@ end
 
 M.split0 = split0
 
+local DEFAULT_BASE_ARGS = {
+  'for-each-ref',
+  '--format=%(refname) %(symref)',
+  'refs/remotes/origin/HEAD',
+  'refs/remotes/origin/main',
+  'refs/remotes/origin/master',
+}
+
+-- The branch origin/HEAD points at, else origin/main, else origin/master.
+function M.parse_default_base(out)
+  local refs = {}
+  for line in out:gmatch('[^\n]+') do
+    local name, target = line:match('^(%S+) ?(%S*)$')
+    refs[name] = target
+  end
+  local head = refs['refs/remotes/origin/HEAD']
+  if head and head ~= '' then
+    return (head:gsub('^refs/remotes/', ''))
+  end
+  if refs['refs/remotes/origin/main'] then
+    return 'origin/main'
+  end
+  if refs['refs/remotes/origin/master'] then
+    return 'origin/master'
+  end
+end
+
+function M.default_base(root, cb)
+  M.run(root, DEFAULT_BASE_ARGS, function(out)
+    cb(M.parse_default_base(out))
+  end)
+end
+
+function M.default_base_sync(root)
+  return M.parse_default_base(M.run_sync(root, DEFAULT_BASE_ARGS))
+end
+
 return M

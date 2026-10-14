@@ -129,7 +129,7 @@ function M.print_status()
   if not st.active then
     msg = 'prflow: inactive'
   elseif not st.ready then
-    msg = ('prflow: loading %s...'):format(st.ref)
+    msg = ('prflow: loading %s...'):format(st.ref or 'default base')
   else
     local against = st.mode == 'base' and st.ref or st.mode
     msg = ('prflow: %s vs %s (%s), %d files'):format(st.branch, against, st.base:sub(1, 7), #st.files)
@@ -147,7 +147,7 @@ function M.help()
     { 'prflow: review a branch inside your buffers', 'Title' },
     { '' },
     { 'Commands', 'Title' },
-    { '  :PrflowStart [ref]            start review against merge-base of ref (default origin/main)' },
+    { '  :PrflowStart [ref]            start review against merge-base of ref (default: origin/HEAD, main, master)' },
     { '  :PrflowStop                   stop and clear all highlights' },
     { '  :PrflowStatus                 branch, base and number of changed files' },
     { '  :PrflowFiles                  pick a changed file, opens at its first hunk' },

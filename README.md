@@ -28,7 +28,7 @@ Requires Neovim 0.10+ and `git`. No other dependencies;
 
 | Command | What it does |
 | --- | --- |
-| `:PrflowStart [ref]` | Start review mode against the merge-base of `ref` (default `origin/main`) and `HEAD`. |
+| `:PrflowStart [ref]` | Start review mode against the merge-base of `ref` and `HEAD`. Without `ref`: the branch `origin/HEAD` points at, else `origin/main`, else `origin/master`. |
 | `:PrflowStop` | Leave review mode and clear every highlight. |
 | `:PrflowStatus` | Show branch, base and number of changed files. |
 | `:PrflowFiles` | Pick a changed file (`status path +added -removed`); opens it at its first hunk. |
@@ -61,7 +61,7 @@ These are the defaults:
 
 ```lua
 require('prflow').setup({
-  base = 'origin/main',  -- ref used by :PrflowStart without an argument
+  base = nil,            -- ref for :PrflowStart without an argument; nil = origin/HEAD, main, master
   debounce_ms = 150,     -- wait after the last edit before recomputing hunks
   show_viewed = false,   -- true: ]h / [h also stop on viewed hunks
   keys = {               -- set a key to false to skip that mapping

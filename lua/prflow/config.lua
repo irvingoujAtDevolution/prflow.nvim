@@ -1,7 +1,8 @@
 local M = {}
 
 M.defaults = {
-  base = 'origin/main',
+  -- nil: origin/HEAD's branch, else origin/main, else origin/master.
+  base = nil,
   debounce_ms = 150,
   show_viewed = false,
   keys = {
